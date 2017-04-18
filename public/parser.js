@@ -109,7 +109,7 @@
         throw ("Syntax Error. Expected " + t + " found '") + lookahead.value + "' near '" + input.substr(lookahead.from) + "'";
       }
     };
-    
+
     expression = function() {
       var result, right, type;
       result = term();
