@@ -35,10 +35,11 @@
       MULTOP: /[*\/]/g
     };
     RESERVED_WORD = {
-      p: "P",
+      "print": "PRINT",
       "if": "IF",
-      then: "THEN"
+      "while": "WHILE"
     };
+    SYMBOL_TABLE = {};
     make = function(type, value) {
       return {
         type: type,
@@ -96,7 +97,7 @@
   };
 
   var parse = function(input) {
-    var condition, expression, factor, lookahead, match, statement, statements, term, tokens, tree;
+    var condition, expression, factor, lookahead, match, statement, statements, term, tokens, tree, loop, assign;
     tokens = input.tokens();
     lookahead = tokens.shift();
     match = function(t) {
@@ -109,6 +110,76 @@
         throw ("Syntax Error. Expected " + t + " found '") + lookahead.value + "' near '" + input.substr(lookahead.from) + "'";
       }
     };
+
+    // statements -> (statement ";"")+
+    statements = function() {
+        var result = [statement()];
+        while (lookahead && lookahead.type === ";") {
+            match(";");
+            result.push(statement());
+        }
+        if (result.length === 1) {
+            return result[0];
+        } else {
+            return result;
+        }
+    }
+
+    // statement -> "if" condition "{" statements "}" |  "while" "(" condition ")" "{" statements "}" | assign
+    statement = function() {
+        var left, right, result;
+        if (lookahead && lookahead.type === "IF") {
+            match("IF");
+            left = condition();
+            match("{");
+            right = statements();
+            result = {
+                type: "IF",
+                condition: left,
+                consequent: right
+            };
+        } else if (lookahead && lookahead.type === "WHILE") {
+            match("WHILE");
+            match("(");
+            left = condition();
+            match(")");
+            match("{");
+            right = statements();
+            match("}");
+        } else {
+            result = assign();
+        }
+        return result;
+    }
+
+    condition = function() {
+        var left, right, result;
+        left = expression();
+        var operator = lookahead.value;
+        match("COMPARISON");
+        right = expression();
+        result = {
+            type: operator,
+            left: left,
+            right: right
+        };
+        return result;
+    }
+
+    // assign -> ID "=" assign | expression
+    assign = function() {
+        var value;
+        var result = {};
+
+        if (lookahead && lookahead.type === "ID") {
+            value = lookahead.value;
+            match("ID");
+            match("=");
+            SYMBOL_TABLE[value] = assign();
+        } else {
+            return expression();
+        }
+    }
 
     expression = function() {
       var result, right, type;
@@ -165,7 +236,7 @@
       return result;
     };
 
-    tree = expression(input);
+    tree = statements(input);
     if (lookahead != null) {
       throw "Syntax Error parsing statements. " + "Expected 'end of input' and found '" + input.substr(lookahead.from) + "'";
     }
