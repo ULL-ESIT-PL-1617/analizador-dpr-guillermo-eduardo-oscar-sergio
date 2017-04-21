@@ -28,14 +28,14 @@ Diseñe un lenguaje de programación sencillo. Escriba un analizador sintáctico
 7. term -> factor (MULOP factor)*
 8. factor -> "(" expression ")" | NUM | ID
 
-1. Conjunto de sentencias, producción inicial
-2. sentencia
-3. Condicion
-4. bucle while
-5. asignación (De clase)
-6. Una suma.
-7. Una multiplicación
-8. Factor de una operación.
+> 1. Conjunto de sentencias, producción inicial
+> 2. sentencia
+> 3. Condicion
+> 4. bucle while
+> 5. asignación (De clase)
+> 6. Una suma.
+> 7. Una multiplicación
+> 8. Factor de una operación.
 
 ---
 ## Miembros del grupo
