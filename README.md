@@ -7,7 +7,7 @@ Diseñe un lenguaje de programación sencillo. Escriba un analizador sintáctico
 1. Escriba la gramática de manera que sea procesable por un ADPR. Puede usar los operadores `*` y `+` dentro de la gramática para indicar repeticiones.
 2. Escriba el analizador sintáctico para dicho lenguaje. Deberá devolver el árbol de análisis sintáctico.
 3. El lenguaje debe tener, **al menos**:
-	* Declaraciones (aunque no tiene que ser necesariamente tipeado). Esto es, deberían poder declararse objetos como variables, constantes (opcional) y funciones. 
+	* Declaraciones (aunque no tiene que ser necesariamente tipeado). Esto es, deberían poder declararse objetos como variables, constantes (opcional) y funciones.
 	* Sentencias `if`.
 	* Condiciones, como `a <= b`.
 	* Asignaciones.
@@ -17,7 +17,18 @@ Diseñe un lenguaje de programación sencillo. Escriba un analizador sintáctico
 5. Escriba pruebas para el código desarrollado.
 
 ---
+## Gramática
 
+1. statements -> (statement ;)+
+2. statement -> assign | "if" condition "{" statements "}" | loop
+3. condition -> expression COMPARISIONOPERATOR expression
+4. loop -> "while (" condition ") {" statements "}"
+5. assign -> ID "=" assign | expression
+6. expression -> term  (ADDOP term)*
+7. term -> factor (MULOP factor)*
+8. factor -> "(" expression ")" | NUM | ID
+
+---
 ## Miembros del grupo
 
 * [Óscar Darias Plasencia, alu0100892833](https://alu0100892833.github.io)
