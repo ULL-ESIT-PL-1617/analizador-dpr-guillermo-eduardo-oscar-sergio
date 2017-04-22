@@ -97,7 +97,7 @@
   };
 
   var parse = function(input) {
-    var condition, expression, factor, lookahead, match, statement, statements, term, tokens, tree, loop, assign;
+    var condition, consequent, expression, factor, lookahead, match, statement, statements, term, tokens, tree, loop, assign;
     tokens = input.tokens();
     lookahead = tokens.shift();
     match = function(t) {
@@ -133,6 +133,7 @@
             left = condition();
             match("{");
             right = statements();
+            match("}");
             result = {
                 type: "IF",
                 condition: left,
@@ -179,6 +180,12 @@
         } else {
             return expression();
         }
+        result = {
+          type: "ASSIGNMENT",
+          left: value,
+          right: SYMBOL_TABLE[value]
+        } 
+        return result;
     }
 
     expression = function() {
