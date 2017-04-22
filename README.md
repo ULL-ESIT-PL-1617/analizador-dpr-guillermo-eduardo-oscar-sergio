@@ -20,22 +20,24 @@ Diseñe un lenguaje de programación sencillo. Escriba un analizador sintáctico
 ## Gramática
 
 1. statements -> (statement ;)+
-2. statement -> assign | "if" condition "{" statements "}" | loop
+2. statement -> assign | "if" condition "{" statements "}" | loop | "function() {" statements "}"
 3. condition -> expression COMPARISIONOPERATOR expression
 4. loop -> "while (" condition ") {" statements "}"
-5. assign -> ID "=" assign | expression
-6. expression -> term  (ADDOP term)*
-7. term -> factor (MULOP factor)*
-8. factor -> "(" expression ")" | NUM | ID
+5. assign -> ID "=" assign | expression | function
+6. function ->
+7. expression -> term  (ADDOP term)*
+8. term -> factor (MULOP factor)*
+9. factor -> "(" expression ")" | NUM | ID
 
 > 1. Conjunto de sentencias, producción inicial
 > 2. sentencia
 > 3. Condicion
 > 4. bucle while
-> 5. asignación (De clase)
-> 6. Una suma.
-> 7. Una multiplicación
-> 8. Factor de una operación.
+> 5. funcion
+> 6. asignación (De clase)
+> 7. Una suma.
+> 8. Una multiplicación
+> 9. Factor de una operación.
 
 ---
 ## Miembros del grupo
