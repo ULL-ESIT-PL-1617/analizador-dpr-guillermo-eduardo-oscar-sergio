@@ -208,8 +208,17 @@
         if (lookahead && lookahead.type === "ID") {
             value = lookahead.value;
             match("ID");
-            match("=");
-            SYMBOL_TABLE[value] = assign();
+
+            if (lookahead.value === "=") {
+              match("=");
+              SYMBOL_TABLE[value] = assign();
+            }
+
+            else {  // ;
+              console.log("ey");
+              console.log(SYMBOL_TABLE[value]);
+              return SYMBOL_TABLE[value];
+            }
 
         } else if (lookahead && lookahead.type === "FUNCTION"){  // function
             match("FUNCTION");
