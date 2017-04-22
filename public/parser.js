@@ -127,13 +127,18 @@
 
     // statement -> "if" condition "{" statements "}" |  "while" "(" condition ")" "{" statements "}" | assign
     statement = function() {
-        var left, right, result;
+        var left, result;
+        var right = [];
         if (lookahead && lookahead.type === "IF") {
             match("IF");
             left = condition();
             match("{");
-            right = statement();
-            match(";");
+            //right = statement();
+            //match(";");
+            while (lookahead && lookahead.type != "}") {
+               right.push(statement());
+               match(";");
+            }
             match("}");
             result = {
                 type: "IF",
@@ -146,7 +151,10 @@
             left = condition();
             match(")");
             match("{");
-            right = statements();
+            while (lookahead && lookahead.type != "}") {
+               right.push(statement());
+               match(";");
+            }
             match("}");
         } else {
             result = assign();
