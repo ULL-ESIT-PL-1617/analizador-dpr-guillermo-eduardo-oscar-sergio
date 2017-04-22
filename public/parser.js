@@ -132,7 +132,8 @@
             match("IF");
             left = condition();
             match("{");
-            right = statements();
+            right = statement();
+            match(";");
             match("}");
             result = {
                 type: "IF",
@@ -149,7 +150,9 @@
             match("}");
         } else {
             result = assign();
+            console.log("hola");
         }
+
         return result;
     }
 
@@ -184,7 +187,7 @@
           type: "ASSIGNMENT",
           left: value,
           right: SYMBOL_TABLE[value]
-        } 
+        }
         return result;
     }
 
