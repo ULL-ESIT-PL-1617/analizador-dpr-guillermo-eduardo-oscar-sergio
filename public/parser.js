@@ -98,7 +98,7 @@
   };
 
   var parse = function(input) {
-    var condition, consequent, expression, factor, lookahead, match, statement, statements, term, tokens, tree, loop, assign;
+    var condition, consequent, expression, factor, lookahead, match, statement, statements, term, tokens, tree, loop, assign, procedure;
     tokens = input.tokens();
     lookahead = tokens.shift();
     match = function(t) {
@@ -112,30 +112,28 @@
       }
     };
 
-    // statements -> (statement ";"")+
+    // statements -> (statement ";")+
     statements = function() {
-        var result = [statement()];
-        while (lookahead && lookahead.type === ";") {
-            match(";");
+        var result = [];
+        while (lookahead) {
             result.push(statement());
+            match(";");
         }
         if (result.length === 1) {
             return result[0];
         } else {
             return result;
         }
-    }
+    };
 
-    // statement -> "if" condition "{" statements "}" |  "while" "(" condition ")" "{" statements "}" | assign
+    // statement -> "if" condition "{" statements "}" |  "while" "(" condition ")" "{" statements "}" | "print" expression | assign
     statement = function() {
-        var left, result;
+        var left, result, value;
         var right = [];
         if (lookahead && lookahead.type === "IF") {
             match("IF");
             left = condition();
             match("{");
-            //right = statement();
-            //match(";");
             while (lookahead && lookahead.type != "}") {
                right.push(statement());
                match(";");
@@ -147,25 +145,7 @@
                 consequent: right
             };
 
-        } /*else if (lookahead && lookahead.type === "FUNCTION") {
-            match("FUNCTION");
-            match("(");
-            match(")");
-            match("{");
-
-            while (lookahead && lookahead.type != "}") {
-               right.push(statement());
-               match(";");
-            }
-
-            match("}");
-
-            result = {
-              type: "FUNCTION",
-              inside: right
-            }
-
-        } */else if (lookahead && lookahead.type === "WHILE") {
+        } else if (lookahead && lookahead.type === "WHILE") {
             match("WHILE");
             match("(");
             left = condition();
@@ -176,14 +156,23 @@
                match(";");
             }
             match("}");
+        } else if (lookahead && lookahead.type === "PRINT") {
+            match ("PRINT");
+            value = expression();
+            if (value.value && value.value.type && value.value.type === "FUNCTION")
+                throw "Expected expression or ID, but found FUNCTION near '" + input.substr(lookahead.from) + "'";
+            result = {
+                type: "PRINT",
+                content: value
+            };
         } else {
             result = assign();
-            console.log("hola");
         }
 
         return result;
-    }
+    };
 
+    // condition -> expression COMPARISON expression
     condition = function() {
         var left, right, result;
         left = expression();
@@ -196,119 +185,124 @@
             right: right
         };
         return result;
-    }
+    };
 
-    // assign -> ID "=" assign | expression
+    // assign -> ID "=" assign | expression | function
     assign = function() {
-        var value;
+        var left, right, value;
         var cont = [];
-        var right = {};
+        var right;
         var result = {};
 
         if (lookahead && lookahead.type === "ID") {
             value = lookahead.value;
+            left = {
+                type: "ID",
+                value: lookahead.value
+            }
             match("ID");
-
             if (lookahead.value === "=") {
-              match("=");
-              SYMBOL_TABLE[value] = assign();
+                match("=");
+                right = assign();
+                result = {
+                    type: "ASSIGNMENT",
+                    left: left,
+                    right: right
+                }
+                SYMBOL_TABLE[value] = right;
+            } else {
+                result = SYMBOL_TABLE[value];
             }
-
-            else {  // ;
-              console.log("ey");
-              console.log(SYMBOL_TABLE[value]);
-              return SYMBOL_TABLE[value];
-            }
-
-        } else if (lookahead && lookahead.type === "FUNCTION"){  // function
-            match("FUNCTION");
-            match("(");
-            match(")");
-            match("{");
-
-            while (lookahead && lookahead.type != "}") {
-               cont.push(statement());
-               match(";");
-            }
-            match("}");
-
-            right = {
-              type: "FUNCTION",
-              content: cont
-            }
-
-            return(right);
-
+        } else if (lookahead && lookahead.type === "FUNCTION") {
+            result = procedure();
         } else {
-          return expression();
+            result = expression();
         }
 
-        result = {
-          type: "ASSIGNMENT",
-          left: value,
-          right: SYMBOL_TABLE[value]
-        }
         return result;
-    }
+    };
+
+    // procedure -> "FUNCTION" "(" "{" statements "}"
+    procedure = function() {
+        var content = [];
+        match("FUNCTION");
+        match("(");
+        match(")");
+        match("{");
+        while (lookahead && lookahead.type != "}") {
+            content.push(statement());
+            match(";");
+        }
+        match("}");
+        result = {
+            type: "FUNCTION",
+            content: content
+        };
+        return result;
+    };
 
     expression = function() {
-      var result, right, type;
-      result = term();
-      while (lookahead && lookahead.type === "ADDOP") {
-        type = lookahead.value;
-        match("ADDOP");
-        right = term();
-        result = {
-          type: type,
-          left: result,
-          right: right
-        };
-      }
-      return result;
+        var result, right, type;
+        result = term();
+        while (lookahead && lookahead.type === "ADDOP") {
+            type = lookahead.value;
+            match("ADDOP");
+            right = term();
+            result = {
+                type: type,
+                left: result,
+                right: right
+            };
+        }
+        return result;
     };
-    term = function() {
-      var result, right, type;
-      result = factor();
-      while (lookahead && lookahead.type === "MULTOP") {
-        type = lookahead.value;
-        match("MULTOP");
-        right = factor();
-        result = {
-          type: type,
-          left: result,
-          right: right
-        };
-      }
-      return result;
-    };
-    factor = function() {
-      var result;
-      result = null;
-      if (lookahead.type === "NUM") {
-        result = {
-          type: "NUM",
-          value: lookahead.value
-        };
-        match("NUM");
-      } else if (lookahead.type === "ID") {
-        console.log(SYMBOL_TABLE[lookahead.value]);
-        result  =  SYMBOL_TABLE[lookahead.value];
-        match("ID");
-      } else if (lookahead.type === "(") {
-        match("(");
-        result = expression();
-        match(")");
-      } else {
-        throw "Syntax Error. Expected number or identifier or '(' but found " + (lookahead ? lookahead.value : "end of input") + " near '" + input.substr(lookahead.from) + "'";
-      }
 
-      console.log(SYMBOL_TABLE);
-      return result;
+    term = function() {
+        var result, right, type;
+        result = factor();
+        while (lookahead && lookahead.type === "MULTOP") {
+            type = lookahead.value;
+            match("MULTOP");
+            right = factor();
+            result = {
+                type: type,
+                left: result,
+                right: right
+            };
+        }
+        return result;
+    };
+
+    // factor -> NUM | ID | "(" expression ")"
+    factor = function() {
+        var result, value;
+        result = null;
+        if (lookahead.type === "NUM") {
+            result = {
+                type: "NUM",
+                value: lookahead.value
+            };
+            match("NUM");
+        } else if (lookahead.type === "ID") {
+            result = {
+                type: "ID",
+                value: SYMBOL_TABLE[lookahead.value]
+            }
+            match("ID");
+        } else if (lookahead.type === "(") {
+            match("(");
+            result = expression();
+            match(")");
+        } else {
+            throw "Syntax Error. Expected number or identifier or '(' but found " + (lookahead ? lookahead.value : "end of input") + " near '" + input.substr(lookahead.from) + "'";
+        }
+
+        return result;
     };
 
     tree = statements(input);
     if (lookahead != null) {
-      throw "Syntax Error parsing statements. " + "Expected 'end of input' and found '" + input.substr(lookahead.from) + "'";
+        throw "Syntax Error parsing statements. " + "Expected 'end of input' and found '" + input.substr(lookahead.from) + "'";
     }
     return tree;
   };
