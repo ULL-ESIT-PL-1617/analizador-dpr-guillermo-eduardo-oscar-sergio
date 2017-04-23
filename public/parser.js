@@ -156,6 +156,11 @@
                match(";");
             }
             match("}");
+            result = {
+                type: "WHILE",
+                condition: left,
+                right: right
+            };
         } else if (lookahead && lookahead.type === "PRINT") {
             match ("PRINT");
             value = expression();
